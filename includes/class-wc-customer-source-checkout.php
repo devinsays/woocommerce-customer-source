@@ -23,8 +23,14 @@ class WC_Customer_Source_Checkout {
 		// Adds fields to checkout.
 		add_filter( 'woocommerce_checkout_fields', __CLASS__ . '::customer_source_checkout_fields' );
 
-		// Saves fields on checkout.
-		add_action( 'woocommerce_checkout_update_order_meta', __CLASS__ . '::save_customer_source_meta' ), 100, 2 );
+		// Saves fields to order.
+		add_action( 'woocommerce_checkout_update_order_meta', __CLASS__ . '::save_customer_source_meta', 100, 2 );
+
+		// Adds inline styles to hide customer_source_custom.
+		add_action( 'wp_head', __CLASS__ . '::customer_source_custom_styles', 100, 2 );
+
+		// Adds javascript for customer source custom textarea toggle.
+		add_action( 'wp_footer', __CLASS__ . '::customer_source_custom_toggle', 100, 2 );
 
 	}
 
@@ -40,10 +46,9 @@ class WC_Customer_Source_Checkout {
 		// Adds customer source select field.
 		$fields['order']['customer_source'] = array(
 			'type' => 'select',
-			'class' => array( 'form-row-wide' ),
 			'label' => __( 'How did you find out about us?', 'woocommerce-customer-source'),
 			'options' => array(
-				'default' =>   __( '-- Choose an option --', 'woocommerce-customer-source'),
+				'default' =>   __( '-- Select an Option --', 'woocommerce-customer-source'),
 				'facebook' =>  __( 'Facebook', 'woocommerce-customer-source'),
 				'google' =>    __( 'Google', 'woocommerce-customer-source'),
 				'friend' =>    __( 'Friend', 'woocommerce-customer-source'),
@@ -73,16 +78,66 @@ class WC_Customer_Source_Checkout {
 	public static function save_customer_source_meta( $order_id, $data ) {
 
 		$order = wc_get_order( $order_id );
+		$save_required = false;
 
 		// Sanitize customer source data.
 		$customer_source = wc_clean( wp_unslash( isset( $data['customer_source'] ) ? $data['customer_source'] : '' ) );
 		$customer_source_custom = wc_clean( wp_unslash( isset( $data['customer_source_custom'] ) ? $data['customer_source_custom'] : '' ) );
 
-		// Save order meta data.
-		$order->update_meta_data( 'customer_source', $customer_source );
-		$order->update_meta_data( 'customer_source_custom', $customer_source );
-		$order->save();
+		// Save customer_source if specified.
+		if ( '' !== $customer_source ) {
+			$order->update_meta_data( 'customer_source', $customer_source );
+			$save_required = true;
+		}
 
+		// Save customer_source_custom if 'other' was selected.
+		if ( 'other' === $customer_source && '' !== $customer_source_custom ) {
+			$order->update_meta_data( 'customer_source_custom', $customer_source_custom );
+			$save_required = true;
+		}
+
+		// Save the meta to the order if there is data.
+		if ( $save_required ) {
+			$order->save();
+		}
+
+	}
+
+	/**
+	 * Inline styles to toggle the customer source custom textarea.
+	 *
+	 * @access public
+	 * @since    1.0.0
+	 * @return void
+	 */
+	public static function customer_source_custom_styles() {
+		if ( function_exists( 'is_checkout' ) && is_checkout() ) { ?>
+			<style>
+				#customer_source_custom { display: none; }
+				#customer_source_custom.active { display: block; }
+			</style>
+		<?php }
+	}
+
+	/**
+	 * Inline javascript to toggle the customer source custom textarea.
+	 *
+	 * @access public
+	 * @since    1.0.0
+	 * @return void
+	 */
+	public static function customer_source_custom_toggle() {
+		if ( function_exists( 'is_checkout' ) && is_checkout() ) { ?>
+			<script>
+				document.getElementById('customer_source').onchange = function() {
+					if ( 'other' === this.children[this.selectedIndex].value ) {
+						document.getElementById('customer_source_custom').className = 'active';
+					} else {
+						document.getElementById('customer_source_custom').className = '';
+					}
+				}
+			</script>
+		<?php }
 	}
 
 }
