@@ -26,11 +26,11 @@ class WC_Customer_Source_Checkout {
 		// Saves fields to order.
 		add_action( 'woocommerce_checkout_update_order_meta', __CLASS__ . '::save_customer_source_meta', 100, 2 );
 
-		// Adds inline styles to hide customer_source_custom.
-		add_action( 'wp_head', __CLASS__ . '::customer_source_custom_styles', 100, 2 );
+		// Adds inline styles to hide customer_source_notes.
+		add_action( 'wp_head', __CLASS__ . '::customer_source_notes_styles', 100, 2 );
 
 		// Adds javascript for customer source custom textarea toggle.
-		add_action( 'wp_footer', __CLASS__ . '::customer_source_custom_toggle', 100, 2 );
+		add_action( 'wp_footer', __CLASS__ . '::customer_source_notes_toggle', 100, 2 );
 
 	}
 
@@ -57,7 +57,7 @@ class WC_Customer_Source_Checkout {
 		);
 
 		// Adds customer source textarea.
-		$fields['order']['customer_source_custom'] = array(
+		$fields['order']['customer_source_notes'] = array(
 			'type' => 'textarea',
 			'placeholder' => __( 'Let us know where you found out about us...', 'woocommerce-customer-source' ),
 		);
@@ -82,7 +82,7 @@ class WC_Customer_Source_Checkout {
 
 		// Sanitize customer source data.
 		$customer_source = wc_clean( wp_unslash( isset( $data['customer_source'] ) ? $data['customer_source'] : '' ) );
-		$customer_source_custom = wc_clean( wp_unslash( isset( $data['customer_source_custom'] ) ? $data['customer_source_custom'] : '' ) );
+		$customer_source_notes = wc_clean( wp_unslash( isset( $data['customer_source_notes'] ) ? $data['customer_source_notes'] : '' ) );
 
 		// Save customer_source if specified.
 		if ( '' !== $customer_source ) {
@@ -90,9 +90,9 @@ class WC_Customer_Source_Checkout {
 			$save_required = true;
 		}
 
-		// Save customer_source_custom if 'other' was selected.
-		if ( 'other' === $customer_source && '' !== $customer_source_custom ) {
-			$order->update_meta_data( 'customer_source_custom', $customer_source_custom );
+		// Save customer_source_notes if 'other' was selected.
+		if ( 'other' === $customer_source && '' !== $customer_source_notes ) {
+			$order->update_meta_data( 'customer_source_notes', $customer_source_notes );
 			$save_required = true;
 		}
 
@@ -110,11 +110,11 @@ class WC_Customer_Source_Checkout {
 	 * @since    1.0.0
 	 * @return void
 	 */
-	public static function customer_source_custom_styles() {
+	public static function customer_source_notes_styles() {
 		if ( function_exists( 'is_checkout' ) && is_checkout() ) { ?>
 			<style>
-				#customer_source_custom { display: none; }
-				#customer_source_custom.active { display: block; }
+				#customer_source_notes { display: none; }
+				#customer_source_notes.active { display: block; }
 			</style>
 		<?php }
 	}
@@ -126,14 +126,14 @@ class WC_Customer_Source_Checkout {
 	 * @since    1.0.0
 	 * @return void
 	 */
-	public static function customer_source_custom_toggle() {
+	public static function customer_source_notes_toggle() {
 		if ( function_exists( 'is_checkout' ) && is_checkout() ) { ?>
 			<script>
 				document.getElementById('customer_source').onchange = function() {
 					if ( 'other' === this.children[this.selectedIndex].value ) {
-						document.getElementById('customer_source_custom').className = 'active';
+						document.getElementById('customer_source_notes').className = 'active';
 					} else {
-						document.getElementById('customer_source_custom').className = '';
+						document.getElementById('customer_source_notes').className = '';
 					}
 				}
 			</script>

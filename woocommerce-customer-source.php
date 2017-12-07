@@ -152,6 +152,9 @@ class WC_Customer_Source {
 			include_once( $this->plugin_path() . '/includes/class-wc-customer-source-checkout.php' );
 		}
 
+		// Adds user meta.
+		include_once( $this->plugin_path() . '/includes/class-wc-customer-user-meta.php' );
+
 	}
 
 }
